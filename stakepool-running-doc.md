@@ -744,4 +744,4 @@ Our stake address needs to be registered in the blockchain for it to be useful. 
 
 ## Get funds: to do --> Facuet 
 
-curl -v -XPOST "https://faucet.ff.dev.cardano.org/send-money/<YOURADDR>?apiKey=<API KEY>"
+curl -v -XPOST "https://faucet.ff.dev.cardano.org/send-money/<YOURPAYMENTADDR>?apiKey=<API KEY>"
