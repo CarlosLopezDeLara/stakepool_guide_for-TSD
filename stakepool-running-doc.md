@@ -1,7 +1,7 @@
 # Installing and Running a Node
 
 
-## PREREQUISITES
+##PREREQUISITES
 
 Set up your platform:
 
@@ -10,6 +10,7 @@ You will need:
 * An x86 host (AMD or Intel), Virtual Machine or AWS instance with at least 2 cores, 4GB of RAM and at least 10GB of free disk space;
 * A recent version of Linux, not Windows or MacOS – this will help us isolate any issues that arise;
 * Make sure you are on a network that is not firewalled. In particular, we will be using TCP/IP port 3000 and 3001 by default to establish connections with other nodes, so this will need to be open.
+* You can follow this [SERVER TUTORIAL](https://github.com/input-output-hk/cardano-tutorials/blob/master/node-setup/AWS.md) to get the server up and running. 
 
 ## Install dependencies
 
@@ -77,6 +78,7 @@ To download the source code, we use git:
     
 
 This should create a folder ``cardano-node``, then download the latest source code from git into it.
+
 After the download has finished, we can check its content by
   
     ls cardano-node
@@ -91,7 +93,8 @@ For reproducible builds, we should check out a specific release, a specific "tag
 For the FF-testnet, we will use tag `pioneer`, which we can check out as follows:
 
     git fetch --all --tags
-    git checkout tags/<the-tag-you-want>
+    git tag
+    git checkout tags/pioneer-#latest-tag
 
 
 ## Build and install the node
@@ -258,9 +261,9 @@ Cool, we have put a couple of nodes to work! But this nodes can't do anything mo
 
 We have menitoned before that starting the node and connecting it to the network requires 3 important files: 
 
-* topology,json
-* genesis.json
-* config.json
+* ff-topology,json
+* ff-genesis.json
+* ff-config.json
 
 You can download them [here](https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/index.html).
 
@@ -654,25 +657,23 @@ It is also possible to have more fine grained control over filtering of trace ou
 
 ## Create key pair and an address
 
-Create a new SSH connection with your server. 
-Go to `cardano-node` directory with 
-   
-    cd cardano-node
+# Creating keys and addresses
 
-We will be using the command line interface`cardano-cli`now. To learn about the usage of this tool type: 
-   
-    cardano-cli --help
+We need to create two sets of keys and addresses: One set to control our funds (make and receive payments) and one set to control our stake (to participate in the protocol delegating our stake) 
 
-     
-We need to generate an *payment key pair*:
+Let's produce our cryptographic keys first, as we will need them to later create our addresses:
 
-    cardano-cli shelley address key-gen \
-      --verification-key-file payment.vkey \
-      --signing-key-file signing.skey
+### Payment key pair
+1. First we need to generate our _payment key pair_:
 
-This will create two files (here named `payment.vkey` and `payment.skey`), one containing the *public verification key*, one the *private signing key*.
+        cardano-cli shelley address key-gen \
+            --verification-key-file payment.vkey \
+            --signing-key-file payment.skey
 
-The files are in plain-text format and human readable:
+   This will create two files (here named `payment.vkey` and `payment.skey`),
+   one containing the _public verification key_, one the _private signing key_.
+
+   The files are in plain-text format and human readable:
 
         cat payment.vkey
 
@@ -681,227 +682,66 @@ The files are in plain-text format and human readable:
         > cbor-hex:
         >  18af58...
 
-* The first line describes the file type and should not be changed.
-* The second line is a free form text that we could change if we so wished.
-* The key itself is the cbor-encoded byte-string in the fourth line.
+   The first line describes the file type and should not be changed.
+   The second line is a free form text that we could change if we so wished.
+   The key itself is the cbor-encoded byte-string in the fourth line.
    
+### Stake key pair
+2. Now let us create our _stake key pair_ : 
 
-Now we can use the verification key we just created to make an address. For now, we will use an address type that can receive and send transactions, but cannot do staking: `enterprise` type. 
+		cardano-cli shelley stake-address key-gen \
+		--verification-key-file stake.vkey \
+		--signing-key-file stake.skey
+
+### Payment address
+3. We then use `payment.vkey` and `stake.vkey` to create our `payment address`: 
+
+		cardano-cli shelley address build \
+		--payment-verification-key-file payment.vkey \
+		--stake-verification-key-file stake.vkey \
+		--out-file payment.addr  
+     
+This created the file payment.addr, let's check its content: 
+
+		cat payment.addr 
+		
+		> 01ed8...
 
 
-    cardano-cli shelley address build \
-        --payment-verification-key-file payment.vkey \
+4. In order to query your address (see the utxo's at that address),
+   you first need to set environment variable `CARDANO_NODE_SOCKET_PATH`
+   to the socket-path specified in your node configuration. In this example we will use
+   the block-producing node created in the previous steps:
+
+        export CARDANO_NODE_SOCKET_PATH=~/cardano-node/block-producing/db/node.socket
+
+   and make sure that your node is running.  Then use
+
+        cardano-cli shelley query utxo \
+            --address 01df79ad8d... \
+            --testnet-magic 42
+
+   (The `--testnet-magic 42` is specific to the FF-testnet, for mainnet we would use `--mainnet` instead.)
    
-
-        > 619544235027c4d17f924ecbfbc114c99b24a6bedb1fd5a8d5532fbac8e3e4e575
-
-Instead of writing the generated address to the console, this command will store it in file `address`. 
-
-    cardano-cli shelley address build \
-        --payment-verification-key-file payment.vkey > address
-
-
    
-To query your address (see the utxo's at that address),you first need to set environment variable `CARDANO_NODE_SOCKET_PATH` to the socket-path specified in your node configuration, we will use our relay node for that.
+### Stake address
+5. Finnaly, we can create our stake address. This address __CAN'T__ receive payments but will receive the rewards from participating in the protocol. We will save this address in the file `addr.stake`
 
-    export CARDANO_NODE_SOCKET_PATH=relay/db/node.socket      
-   
-Then use
-   
-    cardano-cli shelley query filtered-utxo \
-        --address 619544235027c4d17f924ecbfbc114c99b24a6bedb1fd5a8d5532fbac8e3e4e575 \
-        --testnet-magic 42
-  
- The output should look like this, note that we do not have any funds yet. 
-   
-   ```
-                              TxHash                                 TxIx        Lovelace
-----------------------------------------------------------------------------------------
-   ```
-   
+		cardano-cli shelley stake-address build \
+		--staking-verification-key-file stake.vkey \
+		--out-file stake.addr 
+
+This created the file stake.addr, let's check its content: 
+
+		cat stake.addr 
+		
+		> 820058... 
+		
+Our stake address needs to be registered in the blockchain for it to be useful. We deal with that in another tutorial ["Registering stake address to the blockchain"](staking-key.md) 
+
+     
    
 
 ## Get funds: to do --> Facuet 
 
-export CARDANO_NODE_SOCKET_PATH=/root/ff_testnet/producer/db/node.socket
-
-
-## Live View 
-
-The node can run in either the SimpleView or __LiveView__. The SimpleView just
-uses standard output, optionally with log output to a file. __The LiveView__ is a text
-console with a live view of various node metrics.
-
-When LiveView is used logging output to 'stdout' is automatically disabled.**IS IT TRUE**??  
-
-
-
-# Steps for creating a Stake Pool:
-
-
-    export CARDANO_NODE_SOCKET_PATH=/root/ff_testnet/producer/db/node.socket
-
-## get the prorocol parameters
-  	cardano-cli shelley query protocol-parameters \
-		 --testnet-magic 42 > pparams.json
-		
-## 1. Create the pool owner address, associating a payment and a stake key pair
-### 1.1. create payment keys for pool owner address
-	cardano-cli shelley address key-gen \
-		--verification-key-file owner_payment.vkey \
-		--signing-key-file owner_payment.skey
-	
-### 1.2. create stake keys for pool owner address
-	cardano-cli shelley stake-address key-gen \
-		--verification-key-file owner_stake.vkey \
-		--signing-key-file owner_stake.skey
-
-### 1.3. create the payment address for the stake pool owner
-	cardano-cli shelley address build \
-		--payment-verification-key-file wner_payment.vkey \
-		--staking-verification-key-file owner_stake.vkey > owner.addr
-
-### 1.4. create the stake address for the stake pool owner		
-	cardano-cli shelley stake-address build \
-		--staking-verification-key-file owner_stake.vkey > owner.stake.addr
-	
-### 1.5. create stake addresses registration certificates
-	cardano-cli shelley stake-address registration-certificate \
-		--staking-verification-key-file owner_stake.vkey \
-		--out-file owner-stake.reg.cert	
-	
-### 1.7. send some funds to the newly created address (stake pool owner)
-
-### 1.8. (optional) submit the owner-stake.reg.cert through a transaction
-	cardano-cli shelley query filtered-utxo \
-		--testnet-magic 42 \
-		--address $(cat owner/owner.addr)
-		
-		                           TxHash                                 TxIx        Lovelace
-		----------------------------------------------------------------------------------------
-		5ee06cb937d59623f9b8565fa97bd752a6f500cb0b66539b1c97b0666f5652e0     0        1000000000
-
-  cardano-cli shelley transaction calculate-min-fee \
-		--testnet-magic 42 \
-		--tx-in-count 1 \
-		--tx-out-count 1 \
-		--ttl 500000 \
-		--signing-key-file owner/owner_payment.skey \
-		--signing-key-file owner/owner_stake.skey \
-		--protocol-params-file pparams.json \
-		--certificate owner/owner-stake.reg.cert
-
-	runTxCalculateMinFee: 171441
-	"keyDeposit": 400000
-	1000000000 - 400000 - 186005 = 999413995
-
-	cardano-cli shelley transaction build-raw \
-		--tx-in 5ee06cb937d59623f9b8565fa97bd752a6f500cb0b66539b1c97b0666f5652e0#0 \
-		--tx-out $(cat owner/owner.addr)+999413995 \
-		--ttl 500000 \
-		--fee 186005 \
-		--certificate owner/owner-stake.reg.cert \
-		--tx-body-file tx-01.body
-
-	cardano-cli shelley transaction sign \
-		--tx-body-file tx-01.body \
-		--signing-key-file owner/owner_payment.skey \
-		--signing-key-file owner/owner_stake.skey \
-		--tx-file tx-01.signed \
-		--testnet-magic 42
-
-	cardano-cli shelley transaction submit \
-		--testnet-magic 42 \
-		--tx-file tx-01.signed
-	
-	  
-	  
-# 2. Create the stake pool
-### 2.1. Create the KES key pair
-	cardano-cli shelley node key-gen-KES \
-		--verification-key-file node-kes.vkey \
-		--signing-key-file node-kes.skey
-
-### 2.2. Create the VRF key pair
-	cardano-cli shelley node key-gen-VRF \
-		--verification-key-file node-vrf.vkey \
-		--signing-key-file node-vrf.skey
-
-### 2.3. Create the cold key pair and node operational certificate counter
-	cardano-cli shelley node key-gen \
-		--verification-key-file node-cold.vkey \
-		--signing-key-file node-cold.skey \
-		--operational-certificate-issue-counter node-cold.counter
-
-### 2.4. Create the node operational certificate
-	cardano-cli shelley node issue-op-cert \
-		--hot-kes-verification-key-file node-kes.vkey \
-		--cold-signing-key-file node-cold.skey \
-		--operational-certificate-issue-counter node-cold.counter \
-		--kes-period 0 \
-		--out-file node.opcert
-		
-
-### 3. register the stake pool
-### 3.1 create the stake pool registration certificate
-	cardano-cli shelley stake-pool registration-certificate \
-		--pool-pledge 0 \
-		--pool-cost   10000012 \
-		--pool-margin 0.05 \
-		--vrf-verification-key-file        		stake_pool/node-vrf.vkey \
-		--stake-pool-verification-key-file 		stake_pool/node-cold.vkey\
-		--reward-account-verification-key-file 	owner/owner_stake.vkey \
-		--pool-owner-staking-verification-key 	owner/owner_stake.vkey \
-		--out-file node-pool-reg.cert
-
-### 3.2. crete the owner-delegation.cert in order to meet the pledge requirements
-	cardano-cli shelley stake-address delegation-certificate \
-		--staking-verification-key-file owner/owner_stake.vkey \
-		--stake-pool-verification-key-file stake_pool/node-cold.vkey \
-		--out-file owner-delegation.cert 
-		
-### 3.3. submit the node-pool-reg.cert and owner-delegation.cert through a transaction
-	cardano-cli shelley query filtered-utxo \
-		--testnet-magic 42 \
-		--address $(cat owner/owner.addr)
-
-							   TxHash                                 TxIx        Lovelace
-	----------------------------------------------------------------------------------------
-	5ee06cb937d59623f9b8565fa97bd752a6f500cb0b66539b1c97b0666f5652e0     0        1000000000
-
-
-	cardano-cli shelley transaction calculate-min-fee \
-		--testnet-magic 42 \
-		--tx-in-count 1 \
-		--tx-out-count 1 \
-		--ttl 500000 \
-		--signing-key-file owner/owner_payment.skey \
-		--signing-key-file owner/owner_stake.skey \
-		--signing-key-file stake_pool/node-cold.skey \
-		--protocol-params-file pparams.json \
-		--certificate stake_pool/node-pool-reg.cert
-
-	runTxCalculateMinFee: 181165
-	 "poolDeposit": 500000000
-	1000000000 - 500000000 - 181165 = 499818835
-
-	cardano-cli shelley transaction build-raw \
-		--tx-in 5ee06cb937d59623f9b8565fa97bd752a6f500cb0b66539b1c97b0666f5652e0#0 \
-		--tx-out $(cat owner/owner.addr)+499818835 \
-		--ttl 600000 \
-		--fee 181165 \
-		--certificate stake_pool/node-pool-reg.cert \
-		--tx-body-file tx-02.body
-
-	cardano-cli shelley transaction sign \
-		--tx-body-file tx-02.body \
-		--signing-key-file owner/owner_payment.skey \
-		--signing-key-file owner/owner_stake.skey \
-		--signing-key-file stake_pool/node-cold.skey \
-		--tx-file tx-02.signed \
-		--testnet-magic 42
-
-	cardano-cli shelley transaction submit \
-		--testnet-magic 42 \
-		--tx-file tx-02.signed
-
+curl -v -XPOST "https://faucet.ff.dev.cardano.org/send-money/<YOURADDR>?apiKey=<API KEY>"
