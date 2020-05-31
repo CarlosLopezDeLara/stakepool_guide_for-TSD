@@ -104,6 +104,12 @@ which will take a couple of minutes the first time you do a build. Later builds 
 
     cabal install cardano-node cardano-cli
 
+   Alternatively, you can use:  
+
+        cabal build all
+        cp -p dist-newstyle/build/x86_64-linux/ghc-8.6.5/cardano-node-1.12.0/x/cardano-node/build/cardano-node/cardano-node ~/.cabal/bin/
+        cp -p dist-newstyle/build/x86_64-linux/ghc-8.6.5/cardano-cli-1.12.0/x/cardano-cli/build/cardano-cli/cardano-cli ~/.cabal/bin/
+
 
 The remark about your `PATH` from above applies here as well: Make sure folder `~/.local/bin` is in your path or copy the executables to a folder that is.
 
