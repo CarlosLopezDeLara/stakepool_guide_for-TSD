@@ -382,7 +382,7 @@ We need to sign the transaction with the signing key __payment.skey__ and save t
 **SUBMIT TRANSACTION**
 Finnally, we can submit the transaction with:
 
-    export CARDANO_NODE_SOCKET_PATH=db/node.socket
+    export CARDANO_NODE_SOCKET_PATH=~/cardano-node/relay/db/node.socket
     
     cardano-cli shelley transaction submit \
             --tx-file tx001.signed \
