@@ -313,14 +313,23 @@ We first want to calculate the necessary fees for this transaction. To do this w
        cardano-cli shelley query protocol-parameters \
        --testnet-magic 42 \
        --out-file protocol.json
+       
+We need another piece of information before we create our transaction. We need the CURRENT TIP of the blockchain, this is, the height of the last block produced. We are looking for the value of `unSlotNo`
 
-   Our transaction will have one input (from `payment.addr`) and two outputs,
-   100 ada to `payment2.addr` and the change back to `payment.addr`. We can calculate the fees with:
+    cardano-cli shelley query tip --testnet-magic 42 
+       
+    > Tip (SlotNo {unSlotNo = 795346}) (ShelleyHash {unShelleyHash = HashHeader {unHashHeader =        6a28a1c9fac321d7f4c8df8de68ee17f1967695460b5b422c93e6faaeeaf5cf2}}) (BlockNo {unBlockNo = 33088})
+       
+So at this moment the tip is on block 795346. This is important because when creating the transaction we need to specify the TTL (Time to live), this is the block height limit for our transaction to be included in a block, if it is not in a block by that time it will be cancelled. 
+
+For example, we know that we have 1 slot per second, lets say that it will take us 10 minutes to build the transaction, and that we want to give it another 10 minutes window to be included in a block, otherwise we want it to be cancelled. So we need 20 minutes. This is 1200 slots. So will want to add 1200 to the current tip. 795346 + 1200 = 796546 So our TTL will be 796546.  
+
+Our transaction will have one input (from `payment.addr`) and two outputs, 100 ada to `payment2.addr` and the change back to `payment.addr`. We can calculate the fees with:
 
        cardano-cli shelley transaction calculate-min-fee \
        --tx-in-count 1 \
        --tx-out-count 2 \
-       --ttl 250000 \
+       --ttl 796546 \
        --testnet-magic 42 \
        --signing-key-file payment.skey \
        --protocol-params-file protocol.json
@@ -333,9 +342,9 @@ So we need to pay 167965 lovelaces fee to create this transaction.
 
 Assuming we want to spend an original utxo containing 1,000,000 ada (1,000,000,000,000 lovelace), now we need to calculate how much is the __change__ that we want to send back to __payment.addr__ 
 
-        expr 1000000000000 - 100000000 - 167965
+    expr 1000000000000 - 100000000 - 167965
 
-        > 999899832035
+    > 999899832035
 
 
 We need the transaction hash and index of the utxo we want to spend, which we can find outas follows:
@@ -348,15 +357,7 @@ We need the transaction hash and index of the utxo we want to spend, which we ca
         > ----------------------------------------------------------------------------------------
         > 4e3a6e7fdcb0d0efa17bf79c13aed2b4cb9baf37fb1aa2e39553d5bd720c5c99     4     1000000000000
 
-We need another piece of information before we create our transaction. We need the CURRENT TIP of the blockchain, this is, the height of the last block produced. We are looking for the value of `unSlotNo`
 
-    cardano-cli shelley query tip --testnet-magic 42 
-       
-    > Tip (SlotNo {unSlotNo = 795346}) (ShelleyHash {unShelleyHash = HashHeader {unHashHeader =        6a28a1c9fac321d7f4c8df8de68ee17f1967695460b5b422c93e6faaeeaf5cf2}}) (BlockNo {unBlockNo = 33088})
-       
-So at this moment the tip is on block 795346. This is important because when creating the transaction we need to specify the TTL (Time to live), this is the block height limit for our transaction to be included in a block, if it is not in a block by that time it will be cancelled. 
-
-For example, we know that we have 1 slot per second, lets say that it will take us 10 minutes to build the transaction, and that we want to give it another 10 minutes window to be included in a block, otherwise we want it to be cancelled. So we need 20 minutes. This is 1200 slots. So will want to add 1200 to the current tip. 795346 + 1200 = 796546 So our TTL will be 796546.  
 
 **RAW TRANSACTION**
 Now have all the information we need to create the transaction (using a "time to live" of slot 796546, after which the transaction will become invalid). We will write our transaction in a file, we will name it `tx001.raw`.
@@ -381,13 +382,14 @@ We need to sign the transaction with the signing key __payment.skey__ and save t
 **SUBMIT TRANSACTION**
 Finnally, we can submit the transaction with:
 
-        export CARDANO_NODE_SOCKET_PATH=db/node.socket
-        
-	cardano-cli shelley transaction submit \
+    export CARDANO_NODE_SOCKET_PATH=db/node.socket
+    
+    cardano-cli shelley transaction submit \
             --tx-file tx001.signed \
             --testnet-magic 42
 
 **CHECK THE BALANCES**
+
 We must give it some time to get incorporated into the blockchain, but eventually, we will see the effect:
 
         cardano-cli shelley query utxo \
@@ -406,7 +408,8 @@ We must give it some time to get incorporated into the blockchain, but eventuall
         > ----------------------------------------------------------------------------------------
         > b64ae44e1195b04663ab863b62337e626c65b0c9855a9fbb9ef4458f81a6f5ee     0         100000000
 	
-## Register stake address : TO DO REQUIRES FUNDS
+## Register stake address : //TO DO//
+
 
 ## Configure block-producing and relay nodes
 Let's stop that single node now and do something more interesting
