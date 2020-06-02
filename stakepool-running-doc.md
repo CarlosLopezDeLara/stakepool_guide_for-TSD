@@ -254,7 +254,7 @@ This created the file stake.addr, let's check its content:
 		
 		> 820058... 
 		
-## Get funds: to do --> Facuet 
+## Get funds: The Faucet 
 
 Before we can create transactions and do fun stuff in the blockchain, we need some funds to work with. We have a faucet to which we can request some testnet tokens. 
 
