@@ -137,47 +137,18 @@ Note: You need to delete the `db`-folder (the database-folder) before running an
 
 ## Get genesis, configutarion, topology files, and start the node
 
-To start your node and connect it to F&F testnet you will need three important files: `ff-config.json` `ff-genesis.json` and `ff-topology.json`. We will download them from <https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/index.html>
+Let us create a new directory inside `cardano-node`to store the configuration files that we will need no start the node. 
+
+    cd cardano-node
+    mkdir relay
+    cd relay
+
+Now, to start your node and connect it to F&F testnet you will need three important files: `ff-config.json` `ff-genesis.json` and `ff-topology.json`. We will download them from <https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/index.html>
 		
     wget https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/ff-config.json
     wget https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/ff-genesis.json
     wget https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/ff-topology.json
-    
-Now you can start the node, double check that port 3001 is open. In the `cardano-node` directory run:
-
-    cardano-node run \
-       --topology ff-topology.json \
-       --database-path db \
-       --socket-path db/socket \
-       --port 3001 \
-       --config ff-config.json
-
-    ![alt text](/Users/carloslopezdelara/Desktop/IOHK/imagesforex1/starting-single-node.png)
-
-**Cool, you have just connected your node to the F&F Testnet.** 
-
-
-# How to start the node and connect it to the testnet.
-
-## Get some configuration files
-
-We have menitoned before that starting the node and connecting it to the network requires 3 important files: 
-
-* ff-topology,json
-* ff-genesis.json
-* ff-config.json
-
-You can download them [here](https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/index.html).
-
-Or from the command line with: 
-
-    wget https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/ff-topology.json
-    wget https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/ff-genesis.json
-    wget https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/ff-config.json
-    
-
-## Starting the node
-
+  
 Starting the the node uses the command `cardano-node run` and a set of options.
 	
 You can get the complete list of available options with `cardano-node run --help`  
@@ -194,17 +165,17 @@ You can get the complete list of available options with `cardano-node run --help
   	                                specified slot
    -h,--help                       Show this help text
    
-To start a passive node, do:
+Now you can start the node, double check that port 3001 is open. In the `cardano-node` directory run:
 
-	cardano-node run --topology path/to/ff-topology.json \
-	                 --database-path path/to/db \
-  		       	 --socket-path path/to/db/node.socket \
-			 --host-addr 192.0.2.0 \
-			 --port PORT \
-			 --config path/to/ff-config.json
+    cardano-node run \
+       --topology relay/ff-topology.json \
+       --database-path relay/db \
+       --socket-path relay/db/node.socket \
+       --host-addr x.x.x.x \
+       --port 3001 \
+       --config relay/ff-config.json
 
-
-
+__NOTE__ you need to replace x.x.x.x with your public ip. In a VPS server, it is the one you use connect to the server. If you are using virtual box, you can find your public searching `My public ip` in google.  
 
 ## Create key pair and an address
 
@@ -264,7 +235,7 @@ This created the file payment.addr, let's check its content:
    to the socket-path specified in your node configuration. In this example we will use
    the block-producing node created in the previous steps:
 
-        export CARDANO_NODE_SOCKET_PATH=~/cardano-node/block-producing/db/node.socket
+        export CARDANO_NODE_SOCKET_PATH=~/cardano-node/relay/db/node.socket
 
    and make sure that your node is running.  Then use
 
