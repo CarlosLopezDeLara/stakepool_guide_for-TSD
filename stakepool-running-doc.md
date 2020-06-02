@@ -28,9 +28,9 @@ We need the following packages and tools on our Linux system to download the sou
 
 If we are using an AWS instance running Amazon Linux AMI 2 (see the [AWS walk-through](AWS.md) for how to get such an instance up and running)or another CentOS/RHEL based system, we can install these dependencies as follows:
 
-        sudo yum update -y
-        sudo yum install git gcc gcc-c++ tmux gmp-devel make tar wget zlib-devel -y
-        sudo yum install systemd-devel ncurses-devel ncurses-compat-libs -y
+    sudo yum update -y
+    sudo yum install git gcc gcc-c++ tmux gmp-devel make tar wget zlib-devel -y
+    sudo yum install systemd-devel ncurses-devel ncurses-compat-libs -y
 
 For Debian/Ubuntu use the following instead:
    
@@ -62,13 +62,13 @@ Above instructions install Cabal version `3.2.0.0`. You can check the version by
 
 Finally we download and install GHC:
 
-        wget https://downloads.haskell.org/~ghc/8.6.5/ghc-8.6.5-x86_64-deb9-linux.tar.xz
-        tar -xf ghc-8.6.5-x86_64-deb9-linux.tar.xz
-        rm ghc-8.6.5-x86_64-deb9-linux.tar.xz
-        cd ghc-8.6.5
-        ./configure
-        sudo make install
-        cd ..
+    wget https://downloads.haskell.org/~ghc/8.6.5/ghc-8.6.5-x86_64-deb9-linux.tar.xz
+    tar -xf ghc-8.6.5-x86_64-deb9-linux.tar.xz
+    rm ghc-8.6.5-x86_64-deb9-linux.tar.xz
+    cd ghc-8.6.5
+    ./configure
+    sudo make install
+    cd ..
 
 ## Download the source code for cardano-node
 
@@ -106,22 +106,17 @@ which will take a couple of minutes the first time you do a build. Later builds 
 
    This will build and install `cardano-node` and `cardano-cli` in folder `~/.cabal/bin` by default, so the remark about your `PATH` from above
    applies here as well: Make sure folder `~/.cabal/bin` is in your path or copy the executables to a folder that is.
-   If you have old versions of `cardano-node` installed on your system, make sure that the new one will be picked! You can check by typing
-
-        which cardano-node
-        > ~/.cabal/bin/cardano-node
-  
+    
    Alternatively, you can use:  
 
-        cabal build all
-        cp -p dist-newstyle/build/x86_64-linux/ghc-8.6.5/cardano-node-1.12.0/x/cardano-node/build/cardano-node/cardano-node ~/.cabal/bin/
-        cp -p dist-newstyle/build/x86_64-linux/ghc-8.6.5/cardano-cli-1.12.0/x/cardano-cli/build/cardano-cli/cardano-cli ~/.cabal/bin/
+    cabal build all
+    cp -p dist-newstyle/build/x86_64-linux/ghc-8.6.5/cardano-node-1.12.0/x/cardano-node/build/cardano-node/cardano-node ~/.cabal/bin/
+    cp -p dist-newstyle/build/x86_64-linux/ghc-8.6.5/cardano-cli-1.12.0/x/cardano-cli/build/cardano-cli/cardano-cli ~/.cabal/bin/
 
-If you have old versions of `cardano-node` installed on your system, make sure that the new one will be picked! You can check by typing
+  If you have old versions of `cardano-node` installed on your system, make sure that the new one will be picked! You can check by typing
 
     which cardano-node
-
-    > ~/.local/bin/cardano-node
+    > ~/.cabal/bin/cardano-node
 
 If you ever want to update the code to a newer version, go to the ``cardano-node`` directory, pull the latest code with ``git`` and rebuild. 
 This will be much faster than the initial build:
@@ -240,7 +235,7 @@ This created the file payment.addr, let's check its content:
    and make sure that your node is running.  Then use
 
         cardano-cli shelley query utxo \
-            --address 01df79ad8d... \
+            --address <YOURADDRESS> \
             --testnet-magic 42
 
    (The `--testnet-magic 42` is specific to the FF-testnet, for mainnet we would use `--mainnet` instead.)
@@ -261,8 +256,10 @@ This created the file stake.addr, let's check its content:
 		
 ## Get funds: to do --> Facuet 
 
-curl -v -XPOST "https://faucet.ff.dev.cardano.org/send-money/<YOURPAYMENTADDR>?apiKey=<API KEY>"
+Before we can create transactions and do fun stuff in the blockchain, we need some funds to work with. We have a faucet to which we can request some testnet tokens. 
 
+ 
+    curl -v -XPOST "https://faucet.ff.dev.cardano.org/send-money/<YOURPAYMENTADDR>?apiKey=<API KEY>"
 	
 ## Register stake address : TO DO REQUIRES FUNDS
 
