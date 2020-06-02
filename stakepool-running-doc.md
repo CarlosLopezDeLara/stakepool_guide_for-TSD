@@ -291,10 +291,11 @@ This created the file stake.addr, let's check its content:
 ## Get funds: to do --> Facuet 
 
 curl -v -XPOST "https://faucet.ff.dev.cardano.org/send-money/<YOURPAYMENTADDR>?apiKey=<API KEY>"
-## Configure block-producing and relay nodes
-	
-## Register stake address : TO DO REQUIRES FUNDS	
 
+	
+## Register stake address : TO DO REQUIRES FUNDS
+
+## Configure block-producing and relay nodes
 Let's stop that single node now and do something more interesting
 
 As stake pool operator, you will have two types of nodes, **block producing nodes** and **relay nodes**. Each block producing node must be accompagnied by several relay nodes.
