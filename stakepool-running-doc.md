@@ -156,7 +156,144 @@ Now you can start the node, double check that port 3001 is open. In the `cardano
 
 **Cool, you have just connected your node to the F&F Testnet.** 
 
+
+# How to start the node and connect it to the testnet.
+
+## Get some configuration files
+
+We have menitoned before that starting the node and connecting it to the network requires 3 important files: 
+
+* ff-topology,json
+* ff-genesis.json
+* ff-config.json
+
+You can download them [here](https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/index.html).
+
+Or from the command line with: 
+
+    wget https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/ff-topology.json
+    wget https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/ff-genesis.json
+    wget https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/ff-config.json
+    
+
+## Starting the node
+
+Starting the the node uses the command `cardano-node run` and a set of options.
+	
+You can get the complete list of available options with `cardano-node run --help`  
+
+	--topology FILEPATH             The path to a file describing the topology.
+  	--database-path FILEPATH        Directory where the state is stored.
+  	--socket-path FILEPATH          Path to a cardano-node socket
+  	--host-addr HOST-NAME           Optionally limit node to one ipv6 or ipv4 address
+  	--port PORT                     The port number
+  	--config NODE-CONFIGURATION     Configuration file for the cardano-node
+  	--validate-db                   Validate all on-disk database files
+  	--shutdown-ipc FD               Shut down the process when this inherited FD reaches EOF
+  	--shutdown-on-slot-synced SLOT  Shut down the process after ChainDB is synced up to the
+  	                                specified slot
+   -h,--help                       Show this help text
+   
+To start a passive node, do:
+
+	cardano-node run --topology path/to/ff-topology.json \
+	                 --database-path path/to/db \
+  		       	 --socket-path path/to/db/node.socket \
+			 --host-addr 192.0.2.0 \
+			 --port PORT \
+			 --config path/to/ff-config.json
+
+
+
+
+## Create key pair and an address
+
+# Creating keys and addresses
+
+We need to create two sets of keys and addresses: One set to control our funds (make and receive payments) and one set to control our stake (to participate in the protocol delegating our stake) 
+
+Let's produce our cryptographic keys first, as we will need them to later create our addresses:
+
+### Payment key pair
+1. First we need to generate our _payment key pair_:
+
+        cardano-cli shelley address key-gen \
+            --verification-key-file payment.vkey \
+            --signing-key-file payment.skey
+
+   This will create two files (here named `payment.vkey` and `payment.skey`),
+   one containing the _public verification key_, one the _private signing key_.
+
+   The files are in plain-text format and human readable:
+
+        cat payment.vkey
+
+        > type: VerificationKeyShelley
+        > title: Free form text
+        > cbor-hex:
+        >  18af58...
+
+   The first line describes the file type and should not be changed.
+   The second line is a free form text that we could change if we so wished.
+   The key itself is the cbor-encoded byte-string in the fourth line.
+   
+### Stake key pair
+2. Now let us create our _stake key pair_ : 
+
+		cardano-cli shelley stake-address key-gen \
+		--verification-key-file stake.vkey \
+		--signing-key-file stake.skey
+
+### Payment address
+3. We then use `payment.vkey` and `stake.vkey` to create our `payment address`: 
+
+		cardano-cli shelley address build \
+		--payment-verification-key-file payment.vkey \
+		--stake-verification-key-file stake.vkey \
+		--out-file payment.addr  
+     
+This created the file payment.addr, let's check its content: 
+
+		cat payment.addr 
+		
+		> 01ed8...
+
+
+4. In order to query your address (see the utxo's at that address),
+   you first need to set environment variable `CARDANO_NODE_SOCKET_PATH`
+   to the socket-path specified in your node configuration. In this example we will use
+   the block-producing node created in the previous steps:
+
+        export CARDANO_NODE_SOCKET_PATH=~/cardano-node/block-producing/db/node.socket
+
+   and make sure that your node is running.  Then use
+
+        cardano-cli shelley query utxo \
+            --address 01df79ad8d... \
+            --testnet-magic 42
+
+   (The `--testnet-magic 42` is specific to the FF-testnet, for mainnet we would use `--mainnet` instead.)
+   
+   
+### Stake address
+5. Finnaly, we can create our stake address. This address __CAN'T__ receive payments but will receive the rewards from participating in the protocol. We will save this address in the file `addr.stake`
+
+		cardano-cli shelley stake-address build \
+		--staking-verification-key-file stake.vkey \
+		--out-file stake.addr 
+
+This created the file stake.addr, let's check its content: 
+
+		cat stake.addr 
+		
+		> 820058... 
+		
+## Get funds: to do --> Facuet 
+
+curl -v -XPOST "https://faucet.ff.dev.cardano.org/send-money/<YOURPAYMENTADDR>?apiKey=<API KEY>"
 ## Configure block-producing and relay nodes
+	
+## Register stake address : TO DO REQUIRES FUNDS	
 
 Let's stop that single node now and do something more interesting
 
@@ -232,7 +369,7 @@ You start `tmux` with
 
 Then you can split the screen with `Ctrl`-`b`-`%` and navigate between the two panes with `Ctrl`-`b`-`→` and `Ctrl`-`b`-`←`.
 
-![tmux with two panels](/Users/carloslopezdelara/Desktop/IOHK/imagesforex1/tmux-view.png)
+
 
 
 From one `tmux`-panel we start the block-producing node with the following command. Under `host-addr` replace the x.x.x.x with your public ip
@@ -258,58 +395,11 @@ We switch to the other `tmux`-panel with `Ctrl`-`b`-`→` and start the relay no
                   
 After a few seconds, both nodes should receive data.
    
-   
-   ![tmux with two nodes](/Users/carloslopezdelara/Desktop/IOHK/imagesforex1/tmux-2-nodes.png)
+
 
 
 Cool, we have put a couple of nodes to work! But this nodes can't do anything more than read from the blockchain. To setup a stake pool and being able to produce blocks we will need a set of keys, addresses, and other things. Let's create some keys first.
 
-
-# How to start the node and connect it to the testnet.
-
-## Get some configuration files
-
-We have menitoned before that starting the node and connecting it to the network requires 3 important files: 
-
-* ff-topology,json
-* ff-genesis.json
-* ff-config.json
-
-You can download them [here](https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/index.html).
-
-Or from the command line with: 
-
-    wget https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/ff-topology.json
-    wget https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/ff-genesis.json
-    wget https://hydra.iohk.io/job/Cardano/cardano-node/cardano-deployment/latest-finished/download/1/ff-config.json
-    
-
-## Starting the node
-
-Starting the the node uses the command `cardano-node run` and a set of options.
-	
-You can get the complete list of available options with `cardano-node run --help`  
-
-	--topology FILEPATH             The path to a file describing the topology.
-  	--database-path FILEPATH        Directory where the state is stored.
-  	--socket-path FILEPATH          Path to a cardano-node socket
-  	--host-addr HOST-NAME           Optionally limit node to one ipv6 or ipv4 address
-  	--port PORT                     The port number
-  	--config NODE-CONFIGURATION     Configuration file for the cardano-node
-  	--validate-db                   Validate all on-disk database files
-  	--shutdown-ipc FD               Shut down the process when this inherited FD reaches EOF
-  	--shutdown-on-slot-synced SLOT  Shut down the process after ChainDB is synced up to the
-  	                                specified slot
-   -h,--help                       Show this help text
-   
-To start a passive node, do:
-
-	cardano-node run --topology path/to/ff-topology.json \
-	                 --database-path path/to/db \
-  		       	 --socket-path path/to/db/node.socket \
-			 --host-addr 192.0.2.0 \
-			 --port PORT \
-			 --config path/to/ff-config.json
 
 
 
@@ -665,93 +755,3 @@ It is also possible to have more fine grained control over filtering of trace ou
 	  }
 	}
 
-## Create key pair and an address
-
-# Creating keys and addresses
-
-We need to create two sets of keys and addresses: One set to control our funds (make and receive payments) and one set to control our stake (to participate in the protocol delegating our stake) 
-
-Let's produce our cryptographic keys first, as we will need them to later create our addresses:
-
-### Payment key pair
-1. First we need to generate our _payment key pair_:
-
-        cardano-cli shelley address key-gen \
-            --verification-key-file payment.vkey \
-            --signing-key-file payment.skey
-
-   This will create two files (here named `payment.vkey` and `payment.skey`),
-   one containing the _public verification key_, one the _private signing key_.
-
-   The files are in plain-text format and human readable:
-
-        cat payment.vkey
-
-        > type: VerificationKeyShelley
-        > title: Free form text
-        > cbor-hex:
-        >  18af58...
-
-   The first line describes the file type and should not be changed.
-   The second line is a free form text that we could change if we so wished.
-   The key itself is the cbor-encoded byte-string in the fourth line.
-   
-### Stake key pair
-2. Now let us create our _stake key pair_ : 
-
-		cardano-cli shelley stake-address key-gen \
-		--verification-key-file stake.vkey \
-		--signing-key-file stake.skey
-
-### Payment address
-3. We then use `payment.vkey` and `stake.vkey` to create our `payment address`: 
-
-		cardano-cli shelley address build \
-		--payment-verification-key-file payment.vkey \
-		--stake-verification-key-file stake.vkey \
-		--out-file payment.addr  
-     
-This created the file payment.addr, let's check its content: 
-
-		cat payment.addr 
-		
-		> 01ed8...
-
-
-4. In order to query your address (see the utxo's at that address),
-   you first need to set environment variable `CARDANO_NODE_SOCKET_PATH`
-   to the socket-path specified in your node configuration. In this example we will use
-   the block-producing node created in the previous steps:
-
-        export CARDANO_NODE_SOCKET_PATH=~/cardano-node/block-producing/db/node.socket
-
-   and make sure that your node is running.  Then use
-
-        cardano-cli shelley query utxo \
-            --address 01df79ad8d... \
-            --testnet-magic 42
-
-   (The `--testnet-magic 42` is specific to the FF-testnet, for mainnet we would use `--mainnet` instead.)
-   
-   
-### Stake address
-5. Finnaly, we can create our stake address. This address __CAN'T__ receive payments but will receive the rewards from participating in the protocol. We will save this address in the file `addr.stake`
-
-		cardano-cli shelley stake-address build \
-		--staking-verification-key-file stake.vkey \
-		--out-file stake.addr 
-
-This created the file stake.addr, let's check its content: 
-
-		cat stake.addr 
-		
-		> 820058... 
-		
-Our stake address needs to be registered in the blockchain for it to be useful. We deal with that in another tutorial ["Registering stake address to the blockchain"](staking-key.md) 
-
-     
-   
-
-## Get funds: to do --> Facuet 
-
-curl -v -XPOST "https://faucet.ff.dev.cardano.org/send-money/<YOURPAYMENTADDR>?apiKey=<API KEY>"
