@@ -1,7 +1,7 @@
 # Installing and Running a Node
 
 
-##PREREQUISITES
+## PREREQUISITES
 
 Set up your platform:
 
