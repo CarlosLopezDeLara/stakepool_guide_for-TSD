@@ -56,6 +56,28 @@ On other systems, you must either move the executable to a folder that is in you
 
 to your `.bashrc`-file.
 
+## Adding ~/.local/bin and ~/.cabal/bin to the PATH 
+
+Navigate to your home folder:
+
+    $ cd 
+Open your .bashrc file with nano text editor 
+
+    $ nano .bashrc
+Go to the bottom of the file and add the following lines 
+
+    export PATH="~/.cabal/bin:$PATH"
+    export PATH="~/.local/bin:$PATH"
+
+`Ctrl O` and `ENTER` to save the changes, `Ctrl X` to exit nano
+
+Now we need to make the computer read the .bashrc file again (it reads the file at startup)
+
+    $ source .bashrc
+Now you should be able to run cabal update 
+
+    $ cabal update 
+
 Above instructions install Cabal version `3.2.0.0`. You can check the version by typing
 
    cabal --version
@@ -130,6 +152,8 @@ This will be much faster than the initial build:
 Note: You need to delete the `db`-folder (the database-folder) before running an updated version of the node.
 
 
+
+ 
 ## Get genesis, configutarion, topology files, and start the node
 
 Let us create a new directory inside `cardano-node`to store the configuration files that we will need no start the node. 
