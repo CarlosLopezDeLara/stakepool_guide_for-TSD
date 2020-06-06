@@ -112,11 +112,11 @@ We change our working directory to the downloaded source code folder:
     cd cardano-node
 
 For reproducible builds, we should check out a specific release, a specific "tag". 
-For the FF-testnet, we will use tag `pioneer`, which we can check out as follows:
+For the FF-testnet, we will use tag `1.13.0`, which we can check out as follows:
 
     git fetch --all --tags
     git tag
-    git checkout tags/pioneer-#latest-tag
+    git checkout tags/1.13.0
 
 
 ## Build and install the node
@@ -129,17 +129,6 @@ which will take a couple of minutes the first time you do a build. Later builds 
    This will build and install `cardano-node` and `cardano-cli` in folder `~/.cabal/bin` by default, so the remark about your `PATH` from above
    applies here as well: Make sure folder `~/.cabal/bin` is in your path or copy the executables to a folder that is.
     
-   Alternatively, you can use:  
-
-    cabal build all
-    cp -p dist-newstyle/build/x86_64-linux/ghc-8.6.5/cardano-node-1.12.0/x/cardano-node/build/cardano-node/cardano-node ~/.cabal/bin/
-    cp -p dist-newstyle/build/x86_64-linux/ghc-8.6.5/cardano-cli-1.12.0/x/cardano-cli/build/cardano-cli/cardano-cli ~/.cabal/bin/
-
-  If you have old versions of `cardano-node` installed on your system, make sure that the new one will be picked! You can check by typing
-
-    which cardano-node
-    > ~/.cabal/bin/cardano-node
-
 If you ever want to update the code to a newer version, go to the ``cardano-node`` directory, pull the latest code with ``git`` and rebuild. 
 This will be much faster than the initial build:
 
@@ -147,13 +136,10 @@ This will be much faster than the initial build:
     git fetch --all --tags
     git tag
     git checkout tags/<the-tag-you-want>
-    cabal install cardano-node cardano-cli
+    cabal install cardano-node cardano-cli --overwrite-policy:always 
 
-Note: You need to delete the `db`-folder (the database-folder) before running an updated version of the node.
+__Note:__ You need to delete the `db`-folder (the database-folder) before running an updated version of the node.
 
-
-
- 
 ## Get genesis, configutarion, topology files, and start the node
 
 Let us create a new directory inside `cardano-node`to store the configuration files that we will need no start the node. 
@@ -196,7 +182,7 @@ Now you can start the node, double check that port 3001 is open. In the `cardano
 
 __NOTE__ you need to replace x.x.x.x with your public ip. In a VPS server, it is the one you use connect to the server. If you are using virtual box, you can find your public searching `My public ip` in google.  
 
-## Create key pair and an address
+
 
 # Creating keys and addresses
 
@@ -283,7 +269,7 @@ This created the file stake.addr, let's check its content:
 		
 		> 820058... 
 		
-## Get funds: The Faucet 
+# Get funds: The Faucet 
 
 Before we can create transactions and do fun stuff in the blockchain, we need some funds to work with. We have a faucet to which we can request some testnet tokens. 
 
@@ -307,7 +293,7 @@ You should see something like this:
     65e99578e91dbf400c42989b5b5ae6dde877510900074f4afd8ff472639da6b3     0     1000000000000
 
     
-## Create a simple transaction 
+# Create a simple transaction 
 
 In this tutorial we want to create and submit a simple transaction.
 We assume that you have created an _paynmet key pair_ and the corresponding _payment address_ and that you have 
@@ -432,8 +418,7 @@ We must give it some time to get incorporated into the blockchain, but eventuall
         > ----------------------------------------------------------------------------------------
         > b64ae44e1195b04663ab863b62337e626c65b0c9855a9fbb9ef4458f81a6f5ee     0         100000000
 	
-## Register stake address : //TO DO//
-
+# Register stake address :
 
 # Register stake address in the blockchain
 
@@ -506,7 +491,7 @@ Before, we created our payment keys and address that allow us to control our fun
 
 Congratulations, your stake key is now registered in the blockchain. 
 
-## Configure block-producing and relay nodes
+# Configure block-producing and relay nodes
 Let's stop that single node now and do something more interesting
 
 As stake pool operator, you will have two types of nodes, **block producing nodes** and **relay nodes**. Each block producing node must be accompagnied by several relay nodes.
@@ -607,18 +592,9 @@ We switch to the other `tmux`-panel with `Ctrl`-`b`-`→` and start the relay no
                   
 After a few seconds, both nodes should receive data.
    
-
-
-
-Cool, we have put a couple of nodes to work! But this nodes can't do anything more than read from the blockchain. To setup a stake pool and being able to produce blocks we will need a set of keys, addresses, and other things. Let's create some keys first.
-
-
-
+Cool!! we have put a couple of nodes to work! But this nodes can't do anything more than read from the blockchain. To setup a stake pool and being able to produce blocks we will need a set of keys, addresses, and other things. Let's create some keys first.
 
 # Understanding your configuration files and how to use them:
-
-
-
 
 ## The topology.json file
 
