@@ -124,7 +124,7 @@ For the FF-testnet, we will use tag `1.13.0`, which we can check out as follows:
 Now we build and install the node with ``cabal``, 
 which will take a couple of minutes the first time you do a build. Later builds will be much faster, because everything that does not change will be cached.
 
-    cabal install cardano-node cardano-cli
+    cabal install cardano-node cardano-cli --overwrite-policy:always 
 
    This will build and install `cardano-node` and `cardano-cli` in folder `~/.cabal/bin` by default, so the remark about your `PATH` from above
    applies here as well: Make sure folder `~/.cabal/bin` is in your path or copy the executables to a folder that is.
