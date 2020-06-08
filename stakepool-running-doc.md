@@ -261,7 +261,8 @@ This created the file payment.addr, let's check its content:
 
 		cardano-cli shelley stake-address build \
 		--staking-verification-key-file stake.vkey \
-		--out-file stake.addr 
+		--out-file stake.addr \
+		--testnet-magic 42
 
 This created the file stake.addr, let's check its content: 
 
