@@ -1,8 +1,6 @@
 # stakepool_guide
 Stake pool operators guide. From Zero to monitor your stake pool.
 
-  - [Guide](stakepool-running-doc.md)
-
   - [INSTALL](0_install.md)
   - [GET CONFIGURATION FILES](1_getConfigFiles.md)
   - [GENERATE KEYS](2_keys_and_addresses)  
@@ -14,4 +12,3 @@ Stake pool operators guide. From Zero to monitor your stake pool.
   - [REGISTER YOUR STAKE POOL](8_register_stakepool.md)
   - [DELEGATE TO YOUR OWN POOL](9_delegate.md)
   - [DEREGISTER YOUR POOL]()
-  
