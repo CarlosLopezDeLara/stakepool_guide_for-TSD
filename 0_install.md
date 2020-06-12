@@ -47,7 +47,7 @@ Download, unpack, install and update Cabal:
     rm cabal-install-3.2.0.0-x86_64-unknown-linux.tar.xz cabal.sig
     mkdir -p ~/.local/bin
     mv cabal ~/.local/bin/
-    cabal update
+
 
 This will work on a fresh [AWS instance](AWS.md) and assumes that folder `~/.local/bin` is in your `PATH`.
 On other systems, you must either move the executable to a folder that is in your `PATH` or modify your `PATH` by adding the line
@@ -73,10 +73,11 @@ Go to the bottom of the file and add the following lines
 
 Now we need to make the computer read the .bashrc file again (it reads the file at startup)
 
-    $ source .bashrc
-Now you should be able to run cabal update
+    source .bashrc
 
-    $ cabal update
+Update cabal 
+
+    cabal update
 
 Above instructions install Cabal version `3.2.0.0`. You can check the version by typing
 
